@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="1437146c-fcc9-4d44-aa78-747ec2951220" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="fileconnectorpocDeleteFlow" doc:id="0efe9463-0bc4-4774-8c5f-83b02a52ca58" >
+		<http:listener doc:name="Listener" doc:id="23182ced-1d06-4b96-ace5-bf81f5d982b8" config-ref="HTTP_Listener_config" path="/test3"/>
+		<logger level="INFO" doc:name="Logger" doc:id="186ecd66-4a03-43d2-bcea-ca2d164ee457" message="StartFlow"/>
+		<file:delete doc:name="Delete" doc:id="0d7e58ae-21f5-409f-88f1-182e0bc17c0b" path="C:\Users\hp\Desktop\New folder\DeleteFolder"/>
+		<ee:transform doc:name="Transform Message" doc:id="68431a3b-8bf7-4d21-9b9e-02bb8a71dbd7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Folder Deleted"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="133d0b59-9d9e-4079-85d1-a26ca58ed6f1" message="EndFlow #[payload]"/>
+	</flow>
+	<flow name="fileconnectorpocListFlow" doc:id="9a935de0-22d0-4cd1-8690-5c339de24215" >
+		<http:listener doc:name="Listener" doc:id="b23be7ce-24bb-4643-8500-b6d91ee64a47" config-ref="HTTP_Listener_config" path="/test2"/>
+		<logger level="INFO" doc:name="Logger" doc:id="1fdfd1a0-0496-435b-9587-0b5e762fa33d" message="StartFlow"/>
+		<file:list doc:name="List" doc:id="7e7c8e95-f555-41be-9d20-a7c8bee16170" directoryPath="C:\Users\hp\Downloads\BOOKS"/>
+		<ee:transform doc:name="Transform Message" doc:id="e8cc6824-17b5-4738-bc4e-656322c5f539" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b72c26cd-616e-4e19-a633-3eb1c8f399d9" message="EndFlow #[payload]"/>
+	</flow>
+	<flow name="fileconnectorpocReadFlow" doc:id="f4175ecf-cde6-45d1-8ee9-831acde6d7bc" >
+		<http:listener doc:name="Listener" doc:id="0e2994fc-ac8c-4511-be4b-a15003ed85d4" config-ref="HTTP_Listener_config" path="/test1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d526c7aa-c79a-4dbb-8301-0bd01cce7dd7" message="StartFlow"/>
+		<file:read doc:name="Read" doc:id="3175b0e1-d7e4-4703-b31d-bca6303a7eea" path="C:\Users\hp\Desktop\ErrorLogs.txt"/>
+		<ee:transform doc:name="Transform Message" doc:id="615315ec-43e6-43a9-b637-7fb5244d8009" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d23eadde-1894-44ee-adce-285218260c93" message="EndFlow #[payload]"/>
+	</flow>
+	<flow name="fileconnectorpocWriteFlow" doc:id="39f37fff-3fd1-4833-8573-b16a000dbd39" >
+		<http:listener doc:name="Listener" doc:id="a74805d4-6833-4873-83c7-1ba9c6a0ea06" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c501d0d7-4f57-41c1-91d4-7f3b726cfb68" message="StartFlow"/>
+		<raise-error doc:name="Raise error" doc:id="40e3f4b5-2d27-4beb-bb72-05f851b41d4b" type="WRITE:WRONG" description='"Error from Write File Connector"'/>
+		<logger level="INFO" doc:name="Logger" doc:id="fd49316e-3531-464b-8790-bc3abaf8d171" message="EndFlow #[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2f76d373-ad5e-4c4d-a6d5-1a9a08b38c55" >
+				<ee:transform doc:name="Transform Message" doc:id="62772f71-26ee-4e71-822e-24706981bc31" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Description": error.description,
+	"ErrorType": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Write" doc:id="450301c5-298e-4da3-8520-0bda15c7b8b0" path="C:\Users\hp\Desktop\ErrorLogs.txt" mode="APPEND"/>
+				<logger level="INFO" doc:name="Logger" doc:id="0f032241-8d8e-4b79-ae56-241689995e9d" message="onErrorPropagate #[payload]"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
